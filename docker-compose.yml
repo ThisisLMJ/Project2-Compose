@@ -1,10 +1,11 @@
-version: '3.7'
+version: '3'
 
 services:
   dind:
     image: docker:dind
     container_name: dind
-    hostname: docker # explicitly specify the hostname
+    networks: 
+      - jenkins
     privileged: true
     user: root
     environment:
@@ -13,14 +14,13 @@ services:
       - docker-certs-ca:/certs/ca
       - docker-certs-client:/certs/client
       - jenkins-data:/var/jenkins_home
-    networks:
-      jenkins:
-        aliases:
-          - docker # specify the network alias
 
   jenkins:
     image: jenkins/jenkins:lts-jdk11
     container_name: jenkins
+    restart: unless-stopped
+    networks:
+      - jenkins
     user: root
     environment:
       - DOCKER_HOST=tcp://docker:2376
@@ -33,15 +33,12 @@ services:
     ports:
       - "8080:8080"
       - "50000:50000"
-    networks:
-      - jenkins
-    restart: unless-stopped
-    dns:
-      - 8.8.8.8
+
+
 
 networks:
   jenkins:
-    name: jenkins
+    drive: bridge
 
 volumes:
   docker-certs-ca:
